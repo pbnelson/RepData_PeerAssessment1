@@ -1,12 +1,6 @@
----
-title: 'Reproducible Research: Peer Assessment 1'
-subtitle: '###_Johns Hopkins Data Science - Reproducible Research_<br>_Assignment #1_'
-author: "Peter Nelson"
-date: "October 14, 2014"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
+Peter Nelson  
+October 14, 2014  
 
 <br>
 <br>
@@ -15,7 +9,8 @@ output:
 
 Import all packages used by the analysis...
 
-```{r, echo = TRUE, echo = TRUE, results='hold'}
+
+```r
 library(plyr)
 library(ggplot2)
 library(grid)
@@ -30,14 +25,16 @@ library(scales)
 
 Set working directory, load the data...
 
-```{r, echo = TRUE}
+
+```r
 setwd("/Users/peter.nelson/Documents/Coursera/jhds-05-repro")
 steps_df <- read.csv("activity.csv")
 ```
 
 Create a nice posix datetime column from the encoded date plus five-minute 'interval', also make a nice time-interval column where date is always constanct. Note that sprintf just left-pads with leading zeros...
 
-```{r, echo = TRUE}
+
+```r
 steps_df$period        <- strptime(paste(steps_df$date, sprintf("%04d", steps_df$interval)), format="%Y-%m-%d %H%M")
 steps_df$time_interval <- strptime(paste('0000-01-01' , sprintf("%04d", steps_df$interval)), format="%Y-%m-%d %H%M")
 ```
@@ -49,7 +46,8 @@ steps_df$time_interval <- strptime(paste('0000-01-01' , sprintf("%04d", steps_df
 
 Summarize the data by date, various stats...
 
-```{r, echo = TRUE}
+
+```r
 steps_by_date_df <- ddply(.data = steps_df, .variables = "date", .fun = summarise,
                                total = sum(steps,  na.rm = TRUE),
                                count = sum(!is.na(steps)),
@@ -62,7 +60,8 @@ steps_by_date_df <- ddply(.data = steps_df, .variables = "date", .fun = summaris
 
 Plot a histogram of steps per day...
 
-```{r daily_histogram, echo = TRUE, fig.height = 4, fig.width = 6, fig.align = 'center'}
+
+```r
 numBreaks <- nclass.FD(steps_by_date_df$total)
 binWidth <- max(steps_by_date_df$total) / numBreaks
 breakSequence <- round(seq(0,  max(steps_by_date_df$total), binWidth))
@@ -84,17 +83,21 @@ p01 <- ggplot() +
 p01
 ```
 
+<img src="./PA1_template_files/figure-html/daily_histogram.png" title="plot of chunk daily_histogram" alt="plot of chunk daily_histogram" style="display: block; margin: auto;" />
+
 <br>
 
-```{r, echo = TRUE, results = 'hide'}
+
+```r
 x <- round(mean(steps_by_date_df$total))
 ```
-Mean steps per day, x = `r x`
+Mean steps per day, x = 9354
 
-```{r, echo = TRUE, results='hide'}
+
+```r
 x <- round(median(steps_by_date_df$total))
 ```
-Median steps per day, x = `r sprintf('%d', x)`
+Median steps per day, x = 10395
 
 <br>
 <br>
@@ -102,7 +105,8 @@ Median steps per day, x = `r sprintf('%d', x)`
 ### What is the average daily activity pattern?
 
 Summarize the steps-taken data by time of day, sum/mean/median...
-```{r, echo = TRUE}
+
+```r
 steps_by_timeofday_df <- ddply(.data = steps_df, .variables = "time_interval", .fun = summarise,
                                total = sum(steps,  na.rm = TRUE),
                                count = sum(!is.na(steps)),
@@ -112,7 +116,8 @@ steps_by_timeofday_df <- ddply(.data = steps_df, .variables = "time_interval", .
 ```
 
 Plot a line chart of mean (and median) steps per five-minute interval. Note that the assignment did not call for a dual-line chart of both mean and median, but I found it to be interesting...
-```{r steps_per_timeofday, echo = TRUE, fig.width = 12}
+
+```r
 p02 <- ggplot(data=steps_by_timeofday_df) +
     scale_x_datetime(breaks = pretty_breaks(n=288/6), label = date_format("%H:%M")) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
@@ -146,21 +151,26 @@ p02 <- ggplot(data=steps_by_timeofday_df) +
 p02
 ```
 
-```{r, echo = TRUE, results='hide'}
+![plot of chunk steps_per_timeofday](./PA1_template_files/figure-html/steps_per_timeofday.png) 
+
+
+```r
 x <- as.character(steps_by_timeofday_df$time_interval[which.max(steps_by_timeofday_df$daily_mean)], '%H:%M')
 ```
-Peak time of day for stepping, based on mean, x = `r x`
+Peak time of day for stepping, based on mean, x = 08:35
 
-```{r, echo = TRUE, results='hide'}
+
+```r
 x <- as.character(steps_by_timeofday_df$time_interval[which.max(steps_by_timeofday_df$daily_median)], '%H:%M')
 ```
-Peak time of day for stepping, based on median, x = `r x`
+Peak time of day for stepping, based on median, x = 08:45
 
 <br>
 <br>
 
 Although this wasn't technically part of the assignment, here I plot a histogram of steps per five-minute interval...
-```{r timeofday_histogram, echo = TRUE, fig.height = 4, fig.width = 6, fig.align = 'center'}
+
+```r
 numBreaks <- nclass.FD(steps_by_timeofday_df$total)
 binWidth <- max(steps_by_timeofday_df$total) / numBreaks
 breakSequence <- round(seq(0,  max(steps_by_timeofday_df$total), binWidth))
@@ -182,21 +192,25 @@ p03 <- ggplot() +
 p03
 ```
 
+<img src="./PA1_template_files/figure-html/timeofday_histogram.png" title="plot of chunk timeofday_histogram" alt="plot of chunk timeofday_histogram" style="display: block; margin: auto;" />
+
 <br>
 <br>
 
 ### Imputing missing values
 
-```{r, echo = TRUE, results='hide'}
+
+```r
 x <- sum(is.na(steps_df$steps))
 ```
-Count of rows having NA value, i.e. missing value, for steps, x = `r x`
+Count of rows having NA value, i.e. missing value, for steps, x = 2304
 
 <br>
 
 Build a new dataset, interpolating missing values with the mean for that time period. Recall that `steps_by_date_df` is a summary by `time_interval`, of mean, median, etc...
 
-```{r, echo = TRUE}
+
+```r
 imputed_steps_df <- steps_df
 for (i in 1:nrow(imputed_steps_df)) {
   if (is.na(imputed_steps_df[i, 'steps'])) {
@@ -209,7 +223,8 @@ for (i in 1:nrow(imputed_steps_df)) {
 
 Summarize the steps-taken data by time of day, sum/mean/median, on the dataset containing imputed values where data were absent...
 
-```{r, echo = TRUE}
+
+```r
 imputed_steps_by_date_df <- ddply(.data = imputed_steps_df, .variables = "date", .fun = summarise,
                                total = sum(steps,  na.rm = TRUE),
                                count = sum(!is.na(steps)),
@@ -220,7 +235,8 @@ imputed_steps_by_date_df <- ddply(.data = imputed_steps_df, .variables = "date",
 
 Plot a histogram of the imputed dataset...
 
-```{r imputed_histogram, echo = TRUE, fig.height = 4, fig.width = 6, fig.align = 'center'}
+
+```r
 numBreaks <- nclass.FD(imputed_steps_by_date_df$total)
 binWidth <- max(imputed_steps_by_date_df$total) / numBreaks
 breakSequence <- round(seq(0,  max(imputed_steps_by_date_df$total), binWidth))
@@ -242,17 +258,21 @@ p04 <- ggplot() +
 p04
 ```
 
+<img src="./PA1_template_files/figure-html/imputed_histogram.png" title="plot of chunk imputed_histogram" alt="plot of chunk imputed_histogram" style="display: block; margin: auto;" />
+
 <br>
 
-```{r, echo = TRUE, results = 'hide'}
+
+```r
 x <- round(mean(imputed_steps_by_date_df$total))
 ```
-Mean imputed-steps per day, x = `r sprintf('%d', x)`
+Mean imputed-steps per day, x = 10766
 
-```{r, echo = TRUE, results='hide'}
+
+```r
 x <- round(median(imputed_steps_by_date_df$total))
 ```
-Median imputed-steps per day, x = `r sprintf('%d', x)`
+Median imputed-steps per day, x = 10766
 
 Note that the median steps per day is equal to the mean. This is in fact correct, and not terribly surprising since we used the mean in so many rows, and those rows were always all rows for an entire day, making the days with any missing data all equal, and thereby over-representing that one value in the daily summary dataset. Frankly, given that structure, it makes little sense to do any imputation, and more sense to simply discard all those days where no data exists. But that wasn't the assignment.
 
@@ -263,12 +283,14 @@ Note that the median steps per day is equal to the mean. This is in fact correct
 
 Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day...
 
-```{r, echo = TRUE}
+
+```r
 steps_df$weekend_flag <- factor(weekdays(steps_df$period) %in% c("Saturday", "Sunday"), labels=c("Weekday", "Weekend"))
 ```
 
 Summarize the steps-taken data by time-of-day and weekday/weekend status...
-```{r, echo = TRUE}
+
+```r
 steps_by_timeofday_and_weekend_df <-
     ddply(.data = steps_df, .variables = c("time_interval", "weekend_flag"), .fun = summarise,
                                 total = sum(steps,  na.rm = TRUE),
@@ -279,7 +301,8 @@ steps_by_timeofday_and_weekend_df <-
 
 Plot charts comparing weekday versus weekend activity. Mean-steps per five-minute interval.
 
-```{r weekend, echo = TRUE, fig.height = 8, fig.width = 12}
+
+```r
 p05 <- ggplot(data=steps_by_timeofday_and_weekend_df) +
     scale_x_datetime(breaks = pretty_breaks(n=288/6), label = date_format("%H:%M")) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
@@ -332,5 +355,7 @@ p05 <- ggplot(data=steps_by_timeofday_and_weekend_df) +
      )
 p05
 ```
+
+![plot of chunk weekend](./PA1_template_files/figure-html/weekend.png) 
 
 Although it was not a part of the assignment, the preceeding plot shows both the mean and the the median steps per five-minute interval. The larger shaded area is the mean, and the dotted bars within represent the median. Doing so reveals more clearly that during working hours the weekdays are much less active than weekends. Which is hardly surprising.
